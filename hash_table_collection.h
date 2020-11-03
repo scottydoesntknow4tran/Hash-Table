@@ -164,11 +164,41 @@ length++;
 
  template<typename K, typename V>
  void HashTableCollection<K,V>:: remove(const K& a_key){
-   if((size() > 0)){
-     size_t index;
-    // if(bin_search(a_key,index)){ //if binsearch finds the value remove that item
-    //     kv_list.remove(index);
-    //  }
+   if((size() > 0)){ //there are keys in the table
+    std::hash<K> hash_fun;
+    size_t code = hash_fun(a_key);
+    size_t index = code%table_capacity;
+    if(hash_table[index]!= nullptr){// there are key(s) in the bucket
+        Node* ptr2 = hash_table[index];
+        if(hash_table[index]->next == nullptr){ //if there is only one key in the bucket
+            if(ptr2->key == a_key){ //if it is the correct key
+                hash_table[index] = nullptr;
+                delete ptr2;
+                length--;
+                return;
+            }
+            else{ //if it not the correct key
+                return;
+            }
+        }
+        Node* ptr = hash_table[index]->next; // there is at least 2 keys
+        if(ptr2->key == a_key){ //if it is the first key
+                hash_table[index] = ptr;
+                delete ptr2;
+                length--;
+                return;
+        }
+        while(ptr!= nullptr){
+            if(ptr->key == a_key){
+                ptr2->next=ptr->next;
+                delete ptr;
+                length--;
+                return;
+            }
+        ptr= ptr->next;
+        ptr2 = ptr2->next;
+        }
+    }
    }
  };
 
@@ -192,43 +222,51 @@ length++;
 
  template<typename K, typename V>
  void HashTableCollection<K,V>:: find(const K& k1, const K& k2, ArrayList<K>& keys) const{ 
-//    if((k2 >= k1) && (size() > 0)){
-//      while(keys.size()>0){
-//        keys.remove(0);
-//       } size_t index;
-//       bin_search(k1,index); // using binsearch to find the location of the first key or where it should be
-//      for(int i = index; i<kv_list.size(); i++){ // putting all values greater than the first key into the return list
-//        std::pair<K,V> a;
-//          kv_list.get(i,a);
-//        if((a.first >= k1) && (a.first <= k2)){ //putting in all keys in the range, all in sorted order
-//          keys.add(a.first);
-//        }
-//      }
-//    }
+    if((k2 >= k1) && (size() > 0)){
+        while(keys.size()>0){
+            keys.remove(0);
+        }
+        for(int i=0; i<table_capacity; i++){
+            if(hash_table[i]!=nullptr){
+                Node* ptr = hash_table[i];
+                while(ptr!=nullptr){
+                    if(ptr->key >= k1 && ptr->key<= k2){
+                        keys.add(ptr->key);
+                    }
+                    ptr = ptr->next;
+                }
+            }
+        }         
+    }
  };
 
 template<typename K, typename V>
  void HashTableCollection<K,V>:: keys(ArrayList<K>& all_keys) const{
-//      if((size() > 0)){
-//        while(all_keys.size()>0){
-//        all_keys.remove(0);
-//       }
-//      for(int i = 0; i<kv_list.size(); i++){ // putting all keys into the return list, all sorted
-//        std::pair<K,V> a;
-//          kv_list.get(i,a);
-//         all_keys.add(a.first);
-//      }
-//    }
+if(size() > 0){
+        while(all_keys.size()>0){
+            all_keys.remove(0);
+        }
+        for(int i=0; i<table_capacity; i++){
+            if(hash_table[i]!=nullptr){
+                Node* ptr = hash_table[i];
+                while(ptr!=nullptr){
+                    all_keys.add(ptr->key);
+                    ptr = ptr->next;
+                }
+            }
+        }         
+    }
  };
 
  template<typename K, typename V>
  void HashTableCollection<K,V>:: sort(ArrayList<K>& all_keys_sorted) const{ 
-//     if((size() > 0)){
-//       while(all_keys_sorted.size()>0){
-//        all_keys_sorted.remove(0);
-//       }
-//      keys(all_keys_sorted); // all keys are alredy in sorted order
-//    }
+    if((size() > 0)){
+      while(all_keys_sorted.size()>0){
+       all_keys_sorted.remove(0);
+      }
+     keys(all_keys_sorted); 
+     all_keys_sorted.sort();
+   }
  };
 
  template<typename K, typename V>
