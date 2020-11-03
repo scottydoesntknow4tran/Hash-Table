@@ -140,7 +140,7 @@ size_t HashTableCollection<K,V>::max_chain_length(){
 
 template<typename K, typename V>
 double HashTableCollection<K,V>::avg_chain_length(){
-
+    
 };
 
 template<typename K, typename V>
