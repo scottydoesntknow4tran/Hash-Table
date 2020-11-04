@@ -220,6 +220,220 @@ TEST(BasicHashTableCollectionTest, CopyAndAssignment) {
 
 
 
+// Test 8: Test add, size, and double remove on non present keys
+TEST(HashTableCollectionTest, DoubleRemove) {
+  HashTableCollection<string,int> c;
+  c.add("b", 10);
+  c.add("a", 20);
+  c.add("c", 30);
+  ASSERT_EQ(3, c.size());
+  int v;
+  // all three pairs in collection and nothing else
+  ASSERT_EQ(false, c.find("d", v));
+  ASSERT_EQ(true, c.find("a", v));
+  ASSERT_EQ(true, c.find("b", v));
+  ASSERT_EQ(true, c.find("c", v));  
+  
+  //remove a twice and check that nothing changes after trying to remove again
+  c.remove("a");
+  ASSERT_EQ(2, c.size());
+  ASSERT_EQ(false, c.find("a", v));
+  c.remove("a");
+  ASSERT_EQ(2, c.size());
+  ASSERT_EQ(false, c.find("a", v));
+//remove b twice and check that nothing changes after trying to remove again
+  c.remove("b");
+  ASSERT_EQ(1, c.size());
+  ASSERT_EQ(false, c.find("b", v));
+  c.remove("b");
+  ASSERT_EQ(1, c.size());
+  ASSERT_EQ(false, c.find("b", v));
+//remove c twice and check that nothing changes after trying to remove again
+  c.remove("c");
+  ASSERT_EQ(0, c.size());
+  ASSERT_EQ(false, c.find("c", v));
+  c.remove("c");
+  ASSERT_EQ(0, c.size());
+  ASSERT_EQ(false, c.find("c", v));
+
+}
+
+// Test 9: Test sort on large set of random positive and negative keys
+TEST(HashTableCollectionTest, RandNegativeSort) {
+  HashTableCollection<int,string> c;
+  c.add(7,"a");
+  c.add(3, "a");
+  c.add(-6, "a");
+  c.add(1,"a");
+  c.add(-9,"a");
+  c.add(2,"a");
+  c.add(-1,"a");
+  c.add(76, "a");
+  c.add(-36, "a");
+  c.add(10,"a");
+  c.add(4,"a");
+  c.add(11,"a");
+  ASSERT_EQ(12, c.size());
+  ArrayList<int> a;
+  c.sort(a);
+  for (int i = 0; i < 11; ++i) {
+    int val1 = 0;
+    int val2 = 0;
+    a.get(i, val1);
+    a.get(i+1, val2);
+    ASSERT_LE(val1, val2);
+  }
+
+}
+
+// Test 10: Test keys and find function return on empty lists, and make sure they are equivalent on non-empty list
+TEST(HashTableCollectionTest, KeysFunction) {
+  HashTableCollection<int,string> c;
+  ASSERT_EQ(0, c.size());
+  ArrayList<int> a;
+  ArrayList<int> b;
+  c.keys(a);
+  ASSERT_EQ(0,a.size());
+  c.find(-100,100,b);
+  ASSERT_EQ(0,b.size());
+
+  for (int i =0 ; i<=9; i++){
+    c.add(i,"a");
+  }
+
+  ASSERT_EQ(10, c.size());
+  c.keys(a);
+  
+  c.find(-100,100,b);
+  for (int i = 0; i <= 9; ++i) {
+    int val1 =0;
+    int val2 =0;
+    a.get(i, val1);
+    b.get(i, val2);
+    ASSERT_EQ(val1, val2);
+  }
+
+}
+
+// Test 11: Rapid add and remove to 0, 1 and 2 length lists to check corner cases and using find functon on corners
+TEST(HashTableCollectionTest, RapidAddRemove) {
+  HashTableCollection<int,string> c;
+  ASSERT_EQ(0, c.size());
+  ArrayList<int> a;
+  //testing 0 length array
+  for(int i=0; i++; i<10){
+    c.add(7, "q");
+    ASSERT_EQ(1, c.size());
+    c.remove(7);
+    ASSERT_EQ(0, c.size());
+  }
+
+  c.add(8, "q");
+  ASSERT_EQ(1, c.size());
+  //testing 1 length array
+  for(int i=0; i++; i<10){
+    c.add(7, "d");
+    ASSERT_EQ(2, c.size());
+    c.remove(7);
+    ASSERT_EQ(1, c.size());
+  }
+
+  c.add(7, "d");
+  ASSERT_EQ(2, c.size());
+  //testing 1 length array
+  for(int i=0; i++; i<10){
+    c.remove(8);
+    ASSERT_EQ(1, c.size());
+    c.add(8, "q");
+    ASSERT_EQ(2, c.size());
+  }
+
+  ASSERT_EQ(2, c.size());
+  //testing 2 length array
+  string temp1;
+  string temp2;
+  for(int i=0; i++; i<10){
+
+    c.add(9, "e");
+
+    ASSERT_EQ(3, c.size());
+    c.find(9,temp1);
+    ASSERT_EQ("e", temp1) ;
+    c.find(7,temp2);
+    ASSERT_EQ("q", temp2) ;
+
+    c.remove(8);
+
+    ASSERT_EQ(2, c.size());
+    c.find(9,temp1);
+    ASSERT_EQ("e", temp1) ;
+    c.find(7,temp2);
+    ASSERT_EQ("q", temp2) ;
+  }
+}
+
+// Test 12: Testing that all functions work correcly together in congruence
+TEST(HashTableCollectionTest, AllFunctions) {
+  HashTableCollection<int,string> c;
+  ASSERT_EQ(0, c.size());
+
+  for (int i =0 ; i<=9; i++){
+    c.add(i,"a");
+  }
+  ASSERT_EQ(10, c.size()); //testing add
+
+  string t;
+  for (int i =0 ; i<=9; i++){
+    c.find(i,t);
+    ASSERT_EQ("a",t); //testing find1
+  }
+
+  ASSERT_EQ(10,c.size());
+
+  ArrayList<int> a;
+  for (int i =0 ; i<=9; i++){
+    c.find(i,9,a);
+    ASSERT_EQ(10-i,a.size()); //testing find2
+  }
+
+  ASSERT_EQ(10,c.size());
+
+  c.keys(a); // testing keys
+  ArrayList<int> b;
+  c.find(-100,100,b);
+  for (int i = 0; i <= 9; ++i) {
+    int val1 =0;
+    int val2 =0;
+    a.get(i, val1);
+    b.get(i, val2);
+    ASSERT_EQ(val1, val2);
+  }
+
+  ASSERT_EQ(10,c.size());
+
+  c.sort(a); //testing sort
+  int val1 = 0;
+  int val2 = 0;
+  for (int i = 0; i <= 8; ++i) {
+    a.get(i, val1);
+    a.get(i+1, val2);
+    ASSERT_LE(val1, val2);
+  }
+
+  ASSERT_EQ(10,c.size());
+
+  for (int i = 0; i <= 9; ++i) { //testing remove
+    ASSERT_EQ(10-i,c.size());
+    c.remove(i);
+  }
+  
+  ASSERT_EQ(0,c.size());
+
+}
+
+
+
+
 int main(int argc, char** argv)
 {
   testing::InitGoogleTest(&argc, argv);

@@ -206,17 +206,14 @@ size_t HashTableCollection<K,V>:: min_chain_length(){
     size_t min=0;
     if(size() > 0){
         for(int i=0; i<table_capacity; i++){
-            if(hash_table[i] == nullptr){
-                return 0;
-            }
-            else{
+            if(hash_table[i] != nullptr){
                 Node* ptr = hash_table[i];
-                size_t count =1;
+                size_t count = 0;
                 while(ptr!=nullptr){
                     ptr = ptr->next;
                     count++;
                 }
-                if(i==0){
+                if(min == 0){
                     min = count;
                 }
                 else if(count < min){
