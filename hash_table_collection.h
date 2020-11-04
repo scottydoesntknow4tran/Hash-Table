@@ -94,7 +94,47 @@ private:
 
 template<typename K, typename V>
 void HashTableCollection<K,V>::resize_and_rehash(){
+size_t newlength = 0;
+size_t newcapacity = 2*table_capacity;
+Node** newtable = new Node*[newcapacity];
+for(int i=0; i<newcapacity; i++){
+    newtable[i] = nullptr;
+}
+std::hash<K> hash_fun;
+for(int i=0; i<table_capacity; i++){
+        if(hash_table[i] != nullptr){
+            Node* itr = hash_table[i];
+            while(itr!=nullptr){
+                size_t newindex = hash_fun(itr->key)%newcapacity;
 
+                Node* ptr = new Node;
+                ptr->key = itr->key;
+                ptr->value = itr->value;
+                ptr->next = newtable[newindex];
+                newtable[newindex] = ptr;
+                newlength++;
+
+                itr = itr->next;
+            }
+        }
+}    
+for(int i=0; i<table_capacity; i++){
+    if(hash_table[i]!=nullptr){
+        Node* ptr = hash_table[i];
+        Node* itr = ptr->next;
+        while(itr!=nullptr){
+            delete ptr;
+            ptr = itr;
+            itr = itr->next;
+        }
+        delete ptr;
+    }
+}
+delete hash_table;
+hash_table = newtable;
+length = newlength;
+table_capacity = newcapacity;
+newtable = nullptr;
 };
 
 template<typename K, typename V>
@@ -102,7 +142,7 @@ HashTableCollection<K,V>::HashTableCollection(){
     length =0;
     table_capacity = 16;
     hash_table = new Node*[table_capacity];
-    for(int i=0; i<16; i++){
+    for(int i=0; i<table_capacity; i++){
         hash_table[i] = nullptr;
     }
 };
@@ -118,29 +158,109 @@ HashTableCollection<K,V>::~HashTableCollection(){
     //copy constructor
 template<typename K, typename V>
 HashTableCollection<K,V>::HashTableCollection(const HashTableCollection <K,V>& rhs){
-    
+    table_capacity = 16;
+    length=0;
+    hash_table = new Node*[table_capacity];
+    for(int i=0; i<16; i++){
+        hash_table[i] = nullptr;
+    }
+    *this = rhs;
 };
 
     // assignment operator
 template<typename K, typename V>
 HashTableCollection<K,V>& HashTableCollection<K,V>::operator=(const HashTableCollection<K,V>& rhs){
-
+if(this != &rhs){ // list1= list1
+  table_capacity = rhs.table_capacity;
+  hash_table = new Node*[table_capacity];// creating new hash table
+  for(int i=0; i<16; i++){
+    hash_table[i] = nullptr;
+  }
+  length=0;
+    for(int i=0; i<table_capacity; i++){
+        if(rhs.hash_table[i] != nullptr){
+            Node* ptr = rhs.hash_table[i];
+            int k = 0;
+            while(ptr->next != nullptr){
+                ptr = ptr->next;
+                k++;
+            }    
+            add(ptr->key,ptr->value);
+            for(int q = 0; q < k; q++){
+                ptr = rhs.hash_table[i];
+                for(int t = 0; t < k-q-1; t++){
+                ptr = ptr->next;
+                }
+                add(ptr->key,ptr->value);
+            }
+        }
+    }    
+  }
+  //return lhs(this)
+  return *this;
 };
 
     //three public statistics functions
 template<typename K, typename V>
 size_t HashTableCollection<K,V>:: min_chain_length(){
-
+    size_t min=0;
+    if(size() > 0){
+        for(int i=0; i<table_capacity; i++){
+            if(hash_table[i] == nullptr){
+                return 0;
+            }
+            else{
+                Node* ptr = hash_table[i];
+                size_t count =1;
+                while(ptr!=nullptr){
+                    ptr = ptr->next;
+                    count++;
+                }
+                if(i==0){
+                    min = count;
+                }
+                else if(count < min){
+                    min = count;
+                }
+            }
+        }         
+    }
+    return min; // if not found return false
 };
 
 template<typename K, typename V>
 size_t HashTableCollection<K,V>::max_chain_length(){
-
+    size_t max=0;
+    if(size() > 0){
+        for(int i=0; i<table_capacity; i++){
+            if(hash_table[i] != nullptr){
+                Node* ptr = hash_table[i];
+                size_t count =1;
+                while(ptr!=nullptr){
+                    ptr = ptr->next;
+                    count++;
+                }
+                if(count > max){
+                    max = count;
+                }
+            }
+        }         
+    }
+    return max;
 };
 
 template<typename K, typename V>
 double HashTableCollection<K,V>::avg_chain_length(){
-    
+    double chain_count=0;
+    if(size() > 0){
+        for(int i=0; i<table_capacity; i++){
+            if(hash_table[i] != nullptr){
+                chain_count++;
+            }
+        }         
+    return length/chain_count;
+    }
+    return 0;
 };
 
 template<typename K, typename V>
@@ -162,8 +282,8 @@ length++;
 
 
 
- template<typename K, typename V>
- void HashTableCollection<K,V>:: remove(const K& a_key){
+template<typename K, typename V>
+void HashTableCollection<K,V>:: remove(const K& a_key){
    if((size() > 0)){ //there are keys in the table
     std::hash<K> hash_fun;
     size_t code = hash_fun(a_key);
@@ -202,8 +322,8 @@ length++;
    }
  };
 
- template<typename K, typename V>
- bool HashTableCollection<K,V>:: find(const K& search_key, V& the_val) const{
+template<typename K, typename V>
+bool HashTableCollection<K,V>:: find(const K& search_key, V& the_val) const{
    if((size() > 0)){
     std::hash<K> hash_fun;
     size_t code = hash_fun(search_key);
@@ -220,8 +340,8 @@ length++;
      return false; // if not found return false
  };
 
- template<typename K, typename V>
- void HashTableCollection<K,V>:: find(const K& k1, const K& k2, ArrayList<K>& keys) const{ 
+template<typename K, typename V>
+void HashTableCollection<K,V>:: find(const K& k1, const K& k2, ArrayList<K>& keys) const{ 
     if((k2 >= k1) && (size() > 0)){
         while(keys.size()>0){
             keys.remove(0);
@@ -241,7 +361,7 @@ length++;
  };
 
 template<typename K, typename V>
- void HashTableCollection<K,V>:: keys(ArrayList<K>& all_keys) const{
+void HashTableCollection<K,V>:: keys(ArrayList<K>& all_keys) const{
 if(size() > 0){
         while(all_keys.size()>0){
             all_keys.remove(0);
@@ -258,8 +378,8 @@ if(size() > 0){
     }
  };
 
- template<typename K, typename V>
- void HashTableCollection<K,V>:: sort(ArrayList<K>& all_keys_sorted) const{ 
+template<typename K, typename V>
+void HashTableCollection<K,V>:: sort(ArrayList<K>& all_keys_sorted) const{ 
     if((size() > 0)){
       while(all_keys_sorted.size()>0){
        all_keys_sorted.remove(0);
@@ -269,10 +389,10 @@ if(size() > 0){
    }
  };
 
- template<typename K, typename V>
- size_t HashTableCollection<K,V>:: size() const{
-     return length;
- };
+template<typename K, typename V>
+size_t HashTableCollection<K,V>:: size() const{
+    return length;
+};
 
 
 #endif
